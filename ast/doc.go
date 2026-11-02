@@ -400,7 +400,7 @@
 //	type TableReference struct {
 //	    Name     string           // Table name
 //	    Alias    string           // Optional alias
-//	    Subquery *SelectStatement // Derived table (subquery)
+//	    Subquery Statement        // Derived table (subquery): *SelectStatement or *SetOperation
 //	    Lateral  bool             // LATERAL keyword (PostgreSQL v1.6.0)
 //	}
 //

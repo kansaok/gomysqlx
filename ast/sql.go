@@ -1294,7 +1294,7 @@ func tableRefSQL(t *TableReference) string {
 	}
 	if t.Subquery != nil {
 		sb.WriteString("(")
-		sb.WriteString(t.Subquery.SQL())
+		sb.WriteString(stmtSQL(t.Subquery))
 		sb.WriteString(")")
 	} else {
 		sb.WriteString(t.Name)

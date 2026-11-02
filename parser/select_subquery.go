@@ -48,17 +48,11 @@ func (p *Parser) parseFromTableReference() (ast.TableReference, error) {
 			return tableRef, p.expectedError("SELECT in derived table")
 		}
 
-		// Consume SELECT token before calling parseSelectStatement
-		p.advance() // Consume SELECT
-
-		// Parse the subquery
-		subquery, err := p.parseSelectStatement()
+		// Parse the subquery, including set operations
+		// (e.g. FROM (SELECT ... UNION ALL SELECT ...) t) and WITH.
+		subquery, err := p.parseSubquery()
 		if err != nil {
 			return tableRef, err
-		}
-		selectStmt, ok := subquery.(*ast.SelectStatement)
-		if !ok {
-			return tableRef, p.expectedError("SELECT statement in derived table")
 		}
 
 		// Expect closing parenthesis
@@ -68,7 +62,7 @@ func (p *Parser) parseFromTableReference() (ast.TableReference, error) {
 		p.advance() // Consume )
 
 		tableRef = ast.TableReference{
-			Subquery: selectStmt,
+			Subquery: subquery,
 			Lateral:  isLateral,
 		}
 	} else {
@@ -130,15 +124,11 @@ func (p *Parser) parseJoinedTableRef(joinType string) (ast.TableReference, error
 		if !p.isType(models.TokenTypeSelect) && !p.isType(models.TokenTypeWith) {
 			return ref, p.expectedError("SELECT in derived table")
 		}
-		p.advance() // Consume SELECT
 
-		subquery, err := p.parseSelectStatement()
+		// Parse the subquery, including set operations and WITH.
+		subquery, err := p.parseSubquery()
 		if err != nil {
 			return ref, err
-		}
-		selectStmt, ok := subquery.(*ast.SelectStatement)
-		if !ok {
-			return ref, p.expectedError("SELECT statement in derived table")
 		}
 
 		if !p.isType(models.TokenTypeRParen) {
@@ -146,7 +136,7 @@ func (p *Parser) parseJoinedTableRef(joinType string) (ast.TableReference, error
 		}
 		p.advance() // Consume )
 
-		ref = ast.TableReference{Subquery: selectStmt, Lateral: isLateral}
+		ref = ast.TableReference{Subquery: subquery, Lateral: isLateral}
 	} else {
 		joinedName, err := p.parseQualifiedName()
 		if err != nil {

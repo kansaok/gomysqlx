@@ -189,7 +189,8 @@ func (j JoinClause) Children() []Node {
 // Fields:
 //   - Name: Table name (empty if this is a derived table/subquery)
 //   - Alias: Optional table alias (AS alias)
-//   - Subquery: Subquery for derived tables: (SELECT ...) AS alias
+//   - Subquery: Subquery for derived tables: (SELECT ...) AS alias.
+//     Either *SelectStatement or *SetOperation (e.g. (SELECT ... UNION ALL SELECT ...)).
 //   - Lateral: LATERAL keyword for correlated subqueries (PostgreSQL v1.6.0)
 //
 // The Lateral field enables PostgreSQL's LATERAL JOIN feature, which allows
@@ -224,7 +225,7 @@ func (j JoinClause) Children() []Node {
 type TableReference struct {
 	Name       string           // Table name (empty if this is a derived table)
 	Alias      string           // Optional alias
-	Subquery   *SelectStatement // For derived tables: (SELECT ...) AS alias
+	Subquery   Statement        // For derived tables: (SELECT ...) AS alias; *SelectStatement or *SetOperation
 	Lateral    bool             // LATERAL keyword for correlated subqueries (PostgreSQL)
 	TableHints []string         // SQL Server table hints: WITH (NOLOCK), WITH (ROWLOCK, UPDLOCK), etc.
 	Final      bool             // ClickHouse FINAL modifier: forces MergeTree part merge
